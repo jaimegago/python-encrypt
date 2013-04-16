@@ -4,12 +4,11 @@ from Crypto.Cipher import AES
 
 def encrypt_file(password, in_filename, out_filename=None, chunksize=64*1024):
     """ Encrypts a file using AES (CBC mode) with the
-        given key.
-
-        key:
-            The encryption key - a string that must be
-            either 16, 24 or 32 bytes long. Longer keys
-            are more secure.
+        given password hashed to be used as a key.
+	
+	password:
+		A password of any size to be hashed so it's the right size
+		to be used as the encryption key
 
         in_filename:
             Name of the input file

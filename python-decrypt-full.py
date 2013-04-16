@@ -1,27 +1,22 @@
 #!/usr/bin/python
 #
-import os, random, struct, hashlib, StringIO
+import os, random, struct, hashlib, StringIO, yaml
 from Crypto.Cipher import AES
 
-def decrypt_file(password, in_filename, out_filename=None, chunksize=24*1024):
-    """ Decrypts a file using AES (CBC mode) with the
-        given key. Parameters are similar to encrypt_file,
-        with one difference: out_filename, if not supplied
-        will be in_filename without its last extension
-        (i.e. if in_filename is 'aaa.zip.enc' then
-        out_filename will be 'aaa.zip')
+def decrypt_file(password, in_filename, chunksize=24*1024):
+    """ Decrypts a file which orginal format before encrytpion is YAML
+    	using AES (CBC mode) with the
+        given password hashed and used as the key.
+	Decrypted file will remain in memory
     """
     key = hashlib.sha256(password).digest()
-    if not out_filename:
-        #out_filename = os.path.splitext(in_filename)[0]
-        out_filename = StringIO.StringIO()
+    out_filename = StringIO.StringIO()
 
     with open(in_filename, 'rb') as infile:
         origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
         iv = infile.read(16)
         decryptor = AES.new(key, AES.MODE_CBC, iv)
 
-        #with open(out_filename, 'wb') as outfile:
 	outfile = StringIO.StringIO()
         while True:
           chunk = infile.read(chunksize)
@@ -30,7 +25,10 @@ def decrypt_file(password, in_filename, out_filename=None, chunksize=24*1024):
           outfile.write(decryptor.decrypt(chunk))
 
         outfile.truncate(origsize)
-	decrypted_content = outfile.getvalue()
-	print decrypted_content
+	#decrypted_content = outfile.getvalue()
+	decrypted_content = yaml.load(outfile.getvalue())
+	
+    return decrypted_content
 
-decrypt_file('foobar','./passwords.yml.enc')
+decrypted_data = decrypt_file('foobar','./passwords.yml.enc')
+print decrypted_data
